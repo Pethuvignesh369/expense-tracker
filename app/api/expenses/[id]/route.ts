@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromToken, createApiResponse, handleApiError, expenseService, validateExpenseData } from '@/lib/api-service';
 
 // PUT /api/expenses/[id] - Update an expense
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params; // Access the id from params
+    // Await the params to access the id asynchronously
+    const { id } = await params;
 
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
@@ -41,9 +42,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE /api/expenses/[id] - Delete an expense
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params; // Access the id from params
+    // Await the params to access the id asynchronously
+    const { id } = await params;
 
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
