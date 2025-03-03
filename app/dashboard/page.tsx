@@ -514,7 +514,7 @@ export default function Dashboard() {
             className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 pb-4 border-b border-blue-200"
           >
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
-              Personal Finance Tracker
+              Expense Tracker
             </h1>
             <Button 
               onClick={handleLogout}

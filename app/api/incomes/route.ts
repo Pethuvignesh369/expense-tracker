@@ -1,86 +1,111 @@
+// app/api/incomes/route.ts - with null check fix
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Income } from '@/types/income';
+import { getUserFromToken, createApiResponse, handleApiError, incomeService, validateIncomeData } from '@/lib/api-service';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Rate limiting variables
+const RATE_LIMIT = 50; // max requests per minute
+const RATE_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const ipRequestMap = new Map<string, { count: number, lastReset: number }>();
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing environment variables:', {
-    supabaseUrl: !!supabaseUrl,
-    supabaseServiceKey: !!supabaseServiceKey,
-  });
-  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+// Rate limiting middleware
+function checkRateLimit(req: NextRequest) {
+  // Get client IP (or fallback to a default in development)
+  const ip = req.headers.get('x-forwarded-for') || 'localhost';
+  const now = Date.now();
+  
+  if (!ipRequestMap.has(ip)) {
+    ipRequestMap.set(ip, { count: 1, lastReset: now });
+    return true;
+  }
+  
+  const client = ipRequestMap.get(ip)!;
+  
+  // Reset counter if window has passed
+  if (now - client.lastReset > RATE_WINDOW) {
+    client.count = 1;
+    client.lastReset = now;
+    return true;
+  }
+  
+  // Increment and check
+  client.count++;
+  if (client.count > RATE_LIMIT) {
+    return false;
+  }
+  
+  return true;
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+// GET /api/incomes - Get all incomes for the authenticated user
 export async function GET(req: NextRequest) {
   try {
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      console.error('No token provided in GET /api/incomes');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Apply rate limiting
+    if (!checkRateLimit(req)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get authenticated user
+    const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
-      console.error('Auth error in GET /api/incomes:', authError?.message);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: authError || 'Authentication required' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
-      .from('income')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
-
+    // Fetch incomes for the user
+    const { data, error } = await incomeService.getAll(user.id);
     if (error) {
-      console.error('Supabase error in GET /api/incomes:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     }
 
-    return NextResponse.json(data as Income[]);
+    // Return success response
+    return createApiResponse(data);
   } catch (error) {
-    console.error('Unexpected error in GET /api/incomes:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
+// POST /api/incomes - Create a new income
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
-    if (!token) {
-      console.error('No token provided in POST /api/incomes');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Apply rate limiting
+    if (!checkRateLimit(req)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get authenticated user
+    const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
-      console.error('Auth error in POST /api/incomes:', authError?.message);
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: authError || 'Authentication required' }, { status: 401 });
     }
 
+    // Parse and validate request body
     const body = await req.json();
-    const { amount, description, date } = body;
-    if (!amount || !date) {
-      console.error('Missing required fields in POST /api/incomes:', { amount, date });
-      return NextResponse.json({ error: 'Amount and date are required' }, { status: 400 });
+    
+    // Validate required fields
+    const { valid, error: validationError } = validateIncomeData(body);
+    if (!valid) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
     }
 
-    const { data, error } = await supabase
-      .from('income')
-      .insert([{ amount: Number(amount), description, date, user_id: user.id }])
-      .select();
+    // Create income
+    const { data, error } = await incomeService.create(user.id, {
+      amount: Number(body.amount),
+      description: body.description || null,
+      date: body.date
+    });
 
     if (error) {
-      console.error('Supabase error in POST /api/incomes:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return handleApiError(error);
     }
 
-    return NextResponse.json(data[0] as Income, { status: 201 });
+    // Return created income
+    return createApiResponse(data, 201);
   } catch (error) {
-    console.error('Unexpected error in POST /api/incomes:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return handleApiError(error);
   }
 }
