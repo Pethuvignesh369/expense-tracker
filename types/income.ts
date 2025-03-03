@@ -1,3 +1,4 @@
+// types/income.ts
 export type Income = {
     id: string;
     user_id: string;
@@ -6,3 +7,5 @@ export type Income = {
     date: string;
     created_at: string;
   };
+  
+  export type IncomeRequestBody = Partial<Pick<Income, 'amount' | 'description' | 'date'>>;

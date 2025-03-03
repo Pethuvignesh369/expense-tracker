@@ -10,7 +10,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Expense, Income } from '@/types/expense';
+import { Expense } from '@/types/expense';
+import { Income } from '@/types/income';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -78,19 +79,10 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({ expenses, income }) => {
   const options = {
     responsive: true,
     plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Income, Expenses, and Balance Over Time',
-      },
+      legend: { position: 'top' as const },
+      title: { display: true, text: 'Income, Expenses, and Balance Over Time' },
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
+    scales: { y: { beginAtZero: true } },
   };
 
   return <Line data={data} options={options} />;

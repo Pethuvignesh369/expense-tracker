@@ -4,8 +4,13 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Income } from '@/types/income';
 
-export default function IncomeForm() {
+type IncomeFormProps = {
+  onIncomeAdded?: (newIncome: Income) => void; // Callback to update dashboard
+};
+
+export default function IncomeForm({ onIncomeAdded }: IncomeFormProps) {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -15,23 +20,49 @@ export default function IncomeForm() {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.from('income').insert({
-      amount: parseFloat(amount),
-      description,
-      date,
-      user_id: (await supabase.auth.getUser()).data.user?.id,
-    });
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        console.error('Session error:', sessionError?.message);
+        alert('Please log in to add income');
+        return;
+      }
 
-    if (error) {
-      console.error('Error adding income:', error);
-      alert('Failed to add income');
-    } else {
+      const response = await fetch('/api/incomes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          description,
+          date,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API error:', errorData);
+        alert(`Failed to add income: ${errorData.error || 'Unknown error'}`);
+        return;
+      }
+
+      const newIncome = await response.json();
+      if (onIncomeAdded) {
+        onIncomeAdded(newIncome); // Notify dashboard immediately
+      }
+
       setAmount('');
       setDescription('');
       setDate(new Date().toISOString().split('T')[0]);
       alert('Income added successfully');
+    } catch (error) {
+      console.error('Unexpected error in IncomeForm:', error);
+      alert('An unexpected error occurred while adding income');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -46,6 +77,7 @@ export default function IncomeForm() {
           onChange={(e) => setAmount(e.target.value)}
           placeholder="e.g., 5000"
           required
+          disabled={loading}
         />
       </div>
       <div>
@@ -56,6 +88,7 @@ export default function IncomeForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g., Salary"
+          disabled={loading}
         />
       </div>
       <div>
@@ -66,6 +99,7 @@ export default function IncomeForm() {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
+          disabled={loading}
         />
       </div>
       <Button type="submit" disabled={loading}>
