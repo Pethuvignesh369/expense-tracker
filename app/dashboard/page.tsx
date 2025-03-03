@@ -304,6 +304,7 @@ export default function Dashboard() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
           className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 pb-4 border-b border-blue-200"
         >
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text">
@@ -322,7 +323,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
           className="mb-8"
         >
           <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl">
@@ -386,13 +387,13 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
             whileHover={{ scale: 1.02 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 300,
-              delay: 0.2 
-            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.3, 
+              delay: 0.2,
+              hover: { type: "spring", stiffness: 300 }
+            }}
           >
             <Card className="bg-white shadow-lg overflow-hidden border border-green-100">
               <div className="h-2 bg-green-500"></div>
@@ -413,9 +414,13 @@ export default function Dashboard() {
 
           <motion.div
             whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300, delay: 0.3 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.3, 
+              delay: 0.3,
+              hover: { type: "spring", stiffness: 300 }
+            }}
           >
             <Card className="bg-white shadow-lg overflow-hidden border border-red-100">
               <div className="h-2 bg-red-500"></div>
@@ -436,13 +441,13 @@ export default function Dashboard() {
 
           <motion.div
             whileHover={{ scale: 1.02 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 300,
-              delay: 0.4 
-            }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.3, 
+              delay: 0.4,
+              hover: { type: "spring", stiffness: 300 }
+            }}
           >
             <Card className="bg-white shadow-lg overflow-hidden border border-blue-100">
               <div className="h-2 bg-blue-500"></div>
@@ -469,7 +474,7 @@ export default function Dashboard() {
           className="flex flex-wrap gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
         >
           <Dialog open={isIncomeDialogOpen} onOpenChange={setIsIncomeDialogOpen}>
             <DialogTrigger asChild>
@@ -721,7 +726,7 @@ export default function Dashboard() {
           className="mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
         >
           <Card className="bg-white shadow-lg p-4">
             <CardHeader>
@@ -741,7 +746,7 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            transition={{ duration: 0.3, delay: 0.7 }}
           >
             <Card className="bg-white shadow-lg overflow-hidden border border-green-100">
               <div className="h-2 bg-green-500"></div>
@@ -822,7 +827,7 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
+            transition={{ duration: 0.3, delay: 0.8 }}
           >
             <Card className="bg-white shadow-lg overflow-hidden border border-red-100">
               <div className="h-2 bg-red-500"></div>
