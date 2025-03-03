@@ -1,3 +1,4 @@
+// components/OptimizedBalanceGraph.tsx
 'use client';
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -10,26 +11,18 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartOptions,
-  ChartData
 } from 'chart.js';
 import { Expense } from '@/types/expense';
 import { Income } from '@/types/income';
-import { formatIndianCurrency } from '@/utils/formatters';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-interface BalanceGraphProps {
+type BalanceGraphProps = {
   expenses: Expense[];
   income: Income[];
-  useRupees?: boolean;
-}
+};
 
-const BalanceGraph: React.FC<BalanceGraphProps> = ({ 
-  expenses = [], 
-  income = [], 
-  useRupees = true 
-}) => {
+const OptimizedBalanceGraph: React.FC<BalanceGraphProps> = ({ expenses, income }) => {
   // Memoize the graph data calculation to prevent recalculation on every render
   const { chartData, options } = useMemo(() => {
     // Ensure we have valid data
@@ -57,28 +50,27 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({
       return totalIncomeUntilDate - totalExpensesUntilDate;
     });
 
-    // Get expense data for each date
-    const expenseData = allDates.map((date) =>
-      safeExpenses
-        .filter((e) => e.date === date)
-        .reduce((sum, e) => sum + e.amount, 0)
-    );
-
-    // Get income data for each date
+    // Get income and expense data for each date
     const incomeData = allDates.map((date) =>
       safeIncome
         .filter((i) => i.date === date)
         .reduce((sum, i) => sum + i.amount, 0)
     );
 
-    // Format dates for better display (DD/MM format for India)
+    const expenseData = allDates.map((date) =>
+      safeExpenses
+        .filter((e) => e.date === date)
+        .reduce((sum, e) => sum + e.amount, 0)
+    );
+
+    // Format dates for better display
     const formattedDates = allDates.map(date => {
       const [year, month, day] = date.split('-');
-      return `${day}/${month}`;
+      return `${month}/${day}`;
     });
 
     // Create chart data
-    const data: ChartData<'line'> = {
+    const data = {
       labels: formattedDates,
       datasets: [
         {
@@ -86,7 +78,6 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({
           data: expenseData,
           borderColor: 'rgb(239, 68, 68)',
           backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          borderWidth: 2,
           fill: false,
         },
         {
@@ -94,7 +85,6 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({
           data: incomeData,
           borderColor: 'rgb(34, 197, 94)',
           backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          borderWidth: 2,
           fill: false,
         },
         {
@@ -102,59 +92,33 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({
           data: balanceData,
           borderColor: 'rgb(59, 130, 246)',
           borderDash: [5, 5],
-          borderWidth: 2,
           fill: false,
         },
       ],
     };
 
     // Chart options
-    const options: ChartOptions<'line'> = {
+    const options = {
       responsive: true,
-      maintainAspectRatio: false,
       plugins: {
-        legend: { 
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            padding: 20,
-            font: {
-              size: 12
-            }
-          }
-        },
+        legend: { position: 'top' as const },
         title: { 
-          display: false 
+          display: true, 
+          text: 'Income, Expenses, and Balance Over Time',
+          font: { size: 16 }
         },
         tooltip: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          titleColor: '#1f2937',
-          bodyColor: '#4b5563',
-          borderColor: '#e5e7eb',
-          borderWidth: 1,
-          padding: 12,
-          cornerRadius: 8,
-          titleFont: {
-            weight: 'bold',
-            size: 14
-          },
           callbacks: {
-            label: function(context) {
+            label: function(context: any) {
               let label = context.dataset.label || '';
               if (label) {
                 label += ': ';
               }
               if (context.parsed.y !== null) {
-                if (useRupees) {
-                  try {
-                    label += formatIndianCurrency(context.parsed.y);
-                  } catch (e) {
-                    // Fallback if formatter is not available
-                    label += '₹' + context.parsed.y.toFixed(2);
-                  }
-                } else {
-                  label += '$' + context.parsed.y.toFixed(2);
-                }
+                label += new Intl.NumberFormat('en-US', { 
+                  style: 'currency', 
+                  currency: 'USD' 
+                }).format(context.parsed.y);
               }
               return label;
             }
@@ -162,48 +126,28 @@ const BalanceGraph: React.FC<BalanceGraphProps> = ({
         }
       },
       scales: { 
-        x: {
-          grid: {
-            display: false
-          },
-          ticks: {
-            font: {
-              size: 10
-            }
-          }
-        },
         y: { 
           beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
           ticks: {
-            callback: function(value) {
-              if (typeof value !== 'number') return value;
-              return useRupees 
-                ? '₹' + value.toLocaleString('en-IN')
-                : '$' + value;
-            },
-            font: {
-              size: 10
+            callback: function(value: any) {
+              return '$' + value;
             }
           }
         } 
       },
-      interaction: {
-        mode: 'index',
-        intersect: false
-      }
+      maintainAspectRatio: false,
     };
 
     return { chartData: data, options };
-  }, [expenses, income, useRupees]);
+  }, [expenses, income]);
 
   return (
-    <div style={{ height: '100%', width: '100%' }}>
-      <Line data={chartData} options={options} />
+    <div className="bg-white p-4 rounded-lg shadow-lg">
+      <div style={{ height: '400px' }}>
+        <Line data={chartData} options={options} />
+      </div>
     </div>
   );
 };
 
-export default BalanceGraph;
+export default OptimizedBalanceGraph;
