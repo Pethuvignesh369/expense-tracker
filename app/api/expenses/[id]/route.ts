@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromToken, createApiResponse, handleApiError, expenseService, validateExpenseData } from '@/lib/api-service';
 
-// Define the correct type for async route parameters
-interface RouteContext {
-  params: { id: string };
-}
-
 // PUT /api/expenses/[id] - Update an expense
-export async function PUT(req: NextRequest, context: RouteContext) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = context.params; // Directly use params since Next.js now supports async API natively
+    const { id } = params; // Access the id from params
 
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
@@ -46,9 +41,9 @@ export async function PUT(req: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/expenses/[id] - Delete an expense
-export async function DELETE(req: NextRequest, context: RouteContext) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = context.params;
+    const { id } = params; // Access the id from params
 
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
