@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromToken, createApiResponse, handleApiError, expenseService, validateExpenseData } from '@/lib/api-service';
 
-// Types for route parameters
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
+// Define the correct type for async route parameters
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
 
 // PUT /api/expenses/[id] - Update an expense
-export async function PUT(req: NextRequest, context: RouteParams) {
+export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    // Explicitly await params to resolve any dynamic API warnings
-    const params = await context.params;
+    const params = await context.params; // Await the params
     const id = params.id;
-    
+
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
@@ -23,7 +20,7 @@ export async function PUT(req: NextRequest, context: RouteParams) {
 
     // Parse and validate request body
     const body = await req.json();
-    
+
     // Validate fields
     const { valid, error: validationError } = validateExpenseData(body);
     if (!valid) {
@@ -35,7 +32,7 @@ export async function PUT(req: NextRequest, context: RouteParams) {
       amount: Number(body.amount),
       category: body.category,
       description: body.description || null,
-      date: body.date
+      date: body.date,
     });
 
     if (error) {
@@ -50,12 +47,11 @@ export async function PUT(req: NextRequest, context: RouteParams) {
 }
 
 // DELETE /api/expenses/[id] - Delete an expense
-export async function DELETE(req: NextRequest, context: RouteParams) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    // Explicitly await params to resolve any dynamic API warnings
-    const params = await context.params;
+    const params = await context.params; // Await the params
     const id = params.id;
-    
+
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
