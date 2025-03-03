@@ -1,83 +1,80 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { Income } from '@/types/income'; // Import your Income type
+import { getUserFromToken, createApiResponse, handleApiError, expenseService, validateExpenseData } from '@/lib/api-service';
 
-// Initialize Supabase client (server-side)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl!, supabaseKey!);
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params; // Await the params Promise to access the id
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data, error } = await supabase
-    .from('income') // Matches your table name (singular)
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ error: 'Income not found' }, { status: 404 });
-  }
-  return NextResponse.json<Income>(data, { status: 200 });
-}
-
+// PUT /api/expenses/[id] - Update an expense
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params; // Await the params Promise to access the id
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    // Await the params Promise to access the id asynchronously
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
+    }
+
+    // Get authenticated user
+    const { user, error: authError } = await getUserFromToken(req);
+    if (authError || !user) {
+      return NextResponse.json({ error: authError || 'Authentication required' }, { status: 401 });
+    }
+
+    // Parse and validate request body
+    const body = await req.json();
+
+    // Validate fields
+    const { valid, error: validationError } = validateExpenseData(body);
+    if (!valid) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
+
+    // Update expense
+    const { data, error } = await expenseService.update(user.id, id, {
+      amount: Number(body.amount),
+      category: body.category,
+      description: body.description || null,
+      date: body.date,
+    });
+
+    if (error) {
+      return handleApiError(error);
+    }
+
+    // Return updated expense
+    return createApiResponse(data);
+  } catch (error) {
+    return handleApiError(error);
   }
-
-  const body = await req.json();
-  const { amount, description, date } = body;
-  const updates: Partial<Income> = {};
-  if (amount !== undefined) updates.amount = amount;
-  if (description !== undefined) updates.description = description;
-  if (date) updates.date = date;
-
-  const { data, error } = await supabase
-    .from('income') // Matches your table name (singular)
-    .update(updates)
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .select();
-
-  if (error || !data) {
-    return NextResponse.json({ error: 'Income not found' }, { status: 404 });
-  }
-  return NextResponse.json<Income>(data[0], { status: 200 });
 }
 
+// DELETE /api/expenses/[id] - Delete an expense
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params; // Await the params Promise to access the id
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try {
+    // Await the params Promise to access the id asynchronously
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
+    }
 
-  const { error } = await supabase
-    .from('income') // Matches your table name (singular)
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id);
+    // Get authenticated user
+    const { user, error: authError } = await getUserFromToken(req);
+    if (authError || !user) {
+      return NextResponse.json({ error: authError || 'Authentication required' }, { status: 401 });
+    }
 
-  if (error) {
-    return NextResponse.json({ error: 'Income not found' }, { status: 404 });
+    // Delete expense
+    const { success, error } = await expenseService.delete(user.id, id);
+
+    if (error) {
+      return handleApiError(error);
+    }
+
+    // Return success response
+    return createApiResponse({ message: 'Expense deleted successfully' });
+  } catch (error) {
+    return handleApiError(error);
   }
-  return new NextResponse(null, { status: 204 });
 }
