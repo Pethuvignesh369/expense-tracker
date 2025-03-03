@@ -9,10 +9,9 @@ type RouteParams = {
 };
 
 // PUT /api/incomes/[id] - Update an income
-export async function PUT(req: NextRequest, context: RouteParams) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Explicitly await params to resolve any dynamic API warnings
-    const params = await context.params;
     const id = params.id;
     
     // Get authenticated user
@@ -49,10 +48,9 @@ export async function PUT(req: NextRequest, context: RouteParams) {
 }
 
 // DELETE /api/incomes/[id] - Delete an income
-export async function DELETE(req: NextRequest, context: RouteParams) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Explicitly await params to resolve any dynamic API warnings
-    const params = await context.params;
     const id = params.id;
     
     // Get authenticated user
