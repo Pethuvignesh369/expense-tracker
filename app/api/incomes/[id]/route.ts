@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromToken, createApiResponse, handleApiError, incomeService, validateIncomeData } from '@/lib/api-service';
 
-// Types for route parameters
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
-
 // PUT /api/incomes/[id] - Update an income
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Explicitly await params to resolve any dynamic API warnings
-    const id = params.id;
-    
+    // Await the params Promise to access the id asynchronously
+    const { id } = await params;
+
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
@@ -22,7 +18,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     // Parse and validate request body
     const body = await req.json();
-    
+
     // Validate fields
     const { valid, error: validationError } = validateIncomeData(body);
     if (!valid) {
@@ -33,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const { data, error } = await incomeService.update(user.id, id, {
       amount: Number(body.amount),
       description: body.description || null,
-      date: body.date
+      date: body.date,
     });
 
     if (error) {
@@ -48,11 +44,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE /api/incomes/[id] - Delete an income
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Explicitly await params to resolve any dynamic API warnings
-    const id = params.id;
-    
+    // Await the params Promise to access the id asynchronously
+    const { id } = await params;
+
     // Get authenticated user
     const { user, error: authError } = await getUserFromToken(req);
     if (authError || !user) {
