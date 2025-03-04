@@ -9,10 +9,12 @@ import {
 
 export async function PUT(
   req: NextRequest, 
-  { params }: { params: { id: string } }
+  context: { params: { id: string } } 
 ) {
   try {
-    const id = params.id;
+    const { params } = context;
+    const id = params?.id;
+
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -44,7 +46,6 @@ export async function PUT(
       return handleApiError(error);
     }
 
-    // Return updated expense
     return createApiResponse(data);
   } catch (error) {
     return handleApiError(error);
@@ -53,10 +54,12 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest, 
-  { params }: { params: { id: string } }
+  context: { params: { id: string } } 
 ) {
   try {
-    const id = params.id;
+    const { params } = context;
+    const id = params?.id;
+
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -74,7 +77,6 @@ export async function DELETE(
       return handleApiError(error);
     }
 
-    // Return success response
     return createApiResponse({ message: 'Expense deleted successfully' });
   } catch (error) {
     return handleApiError(error);
