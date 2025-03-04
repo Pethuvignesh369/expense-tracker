@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromToken, createApiResponse, handleApiError, expenseService, validateExpenseData } from '@/lib/api-service';
+import { 
+  getUserFromToken, 
+  createApiResponse, 
+  handleApiError, 
+  expenseService, 
+  validateExpenseData 
+} from '@/lib/api-service';
 
-// PUT /api/expenses/[id] - Update an expense
 export async function PUT(
-  req: NextRequest,
+  req: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const id = params.id;
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -46,13 +51,12 @@ export async function PUT(
   }
 }
 
-// DELETE /api/expenses/[id] - Delete an expense
 export async function DELETE(
-  req: NextRequest,
+  req: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const id = params.id;
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
