@@ -7,14 +7,11 @@ import {
   validateExpenseData 
 } from '@/lib/api-service';
 
-export async function PUT(
-  req: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest) {
   try {
-    // Ensure params are accessed asynchronously
-    const { id } = params;
-    
+    // Retrieve `id` from the request URL
+    const id = req.nextUrl.pathname.split('/').pop(); 
+
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -52,12 +49,10 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: NextRequest, 
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
   try {
-    const { id } = params; // Correctly access params
+    // Retrieve `id` from the request URL
+    const id = req.nextUrl.pathname.split('/').pop();
 
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
