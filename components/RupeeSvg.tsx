@@ -2,18 +2,14 @@
 import React from 'react';
 
 interface RupeeSvgProps {
-  size?: number;
   className?: string;
 }
 
-export const RupeeSvg: React.FC<RupeeSvgProps> = ({ 
-  size = 24, 
-  className = "" 
-}) => (
+export const RupeeSvg: React.FC<RupeeSvgProps> = ({ className = "" }) => (
   <svg 
     viewBox="0 0 24 24" 
-    width={size} 
-    height={size} 
+    width="24" 
+    height="24" 
     fill="none" 
     stroke="currentColor" 
     strokeWidth="2" 

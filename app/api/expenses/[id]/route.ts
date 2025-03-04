@@ -4,11 +4,10 @@ import { getUserFromToken, createApiResponse, handleApiError, expenseService, va
 // PUT /api/expenses/[id] - Update an expense
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Await the params Promise to access the id asynchronously
-    const { id } = await params;
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -50,11 +49,10 @@ export async function PUT(
 // DELETE /api/expenses/[id] - Delete an expense
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Await the params Promise to access the id asynchronously
-    const { id } = await params;
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
