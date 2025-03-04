@@ -9,12 +9,12 @@ import {
 
 export async function PUT(
   req: NextRequest, 
-  context: { params: { id: string } } 
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { params } = context;
-    const id = params?.id;
-
+    // Ensure params are accessed asynchronously
+    const { id } = params;
+    
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
     }
@@ -54,11 +54,10 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest, 
-  context: { params: { id: string } } 
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { params } = context;
-    const id = params?.id;
+    const { id } = params; // Correctly access params
 
     if (!id) {
       return NextResponse.json({ error: 'Expense ID is required' }, { status: 400 });
